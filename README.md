@@ -1,6 +1,6 @@
 # ArcGIS Geoprocessing Scripts
 
-Collection of ArcGIS python geoprocessing scripts. For more information, please see the tool descriptions in ArcGIS toolbox.
+Collection of ArcGIS 10.3 python geoprocessing scripts. For more information, please see the tool descriptions in ArcGIS toolbox.
 
 ## Scripts
 - [arcgisgp_change_numeric_field_type_length.py](scripts/arcgisgp_change_numeric_field_type_length.py): Change numeric field length - the tool duplicate selected field with new field length. Support feature class and table.
