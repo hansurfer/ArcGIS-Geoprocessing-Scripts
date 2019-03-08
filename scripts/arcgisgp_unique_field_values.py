@@ -46,7 +46,6 @@ fields = arcpy.GetParameterAsText(1)
 
 fieldList = fields.split(";")
 
-numberrecords = int(arcpy.GetCount_management(inputtable).getOutput(0))
 uniquevalues(constructDict(inputtable, fieldList))
 
 arcpy.AddMessage("    ")
