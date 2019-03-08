@@ -41,11 +41,18 @@ def uniquevalues(valueDict):
                 arcpy.AddMessage("    {}: {}".format(i, icount))
 
 
+'''
+Geoprocessing tool Parameter list
+                              Parameter Properties
+          Display Name      Data type       Type        Direction  MultiValue   Obtained from
+  argv[0]  Input Table      Table View      Required    Input      No
+  argv[1]  Fields           Field           Required    Input      Yes          Input Table
+'''
+
+
 inputtable = arcpy.GetParameterAsText(0)
 fields = arcpy.GetParameterAsText(1)
-
 fieldList = fields.split(";")
 
 uniquevalues(constructDict(inputtable, fieldList))
-
 arcpy.AddMessage("    ")
