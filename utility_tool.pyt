@@ -1234,8 +1234,8 @@ class ChangeTextFieldLenBy(object):
 class ChangeNumetricFieldTypAndLen(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Change Numberic Field Type and Len"
-        self.description = "Change Numberic Field Type and Length. THE SCRIPT DOESN'T CHECK VALUE LENGHT."
+        self.label = "Change Numeric Field Type and Len"
+        self.description = "Change Numeric Field Type and Length. THE SCRIPT DOESN'T CHECK VALUE LENGHT."
         self.canRunInBackground = False
 
     def getParameterInfo(self):
