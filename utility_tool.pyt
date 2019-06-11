@@ -59,6 +59,7 @@ class CountRecordVertice(object):
         """The source code of the tool."""
         inFeatures = parameters[0].valueAsText.split(';')
         for counter, inFeature in enumerate(inFeatures, start=1):
+            inFeature = inFeature.replace("'", "")
             arcpy.AddMessage('\n# {} of {}: {}'.format(
                 counter, len(inFeatures), inFeature))
             numberrecords = int(
@@ -115,6 +116,7 @@ class CheckGeometry(object):
         """The source code of the tool."""
         inFeatures = parameters[0].valueAsText.split(";")
         for counter, inFeature in enumerate(inFeatures, start=1):
+            inFeature = inFeature.replace("'", "")
             arcpy.AddMessage('\n# {} of {}: {}'.format(
                 counter, len(inFeatures), inFeature))
             ws = arcpy.env.scratchGDB
@@ -431,6 +433,7 @@ class ListFieldName(object):
         """The source code of the tool."""
         in_tables = parameters[0].valueAsText.split(";")
         for counter, intable in enumerate(in_tables, start=1):
+            intable = intable.replace("'", "")
             arcpy.AddMessage('\n# {} of {}: {}'.format(
                 counter, len(in_tables), intable))
             for field in arcpy.ListFields(intable):
@@ -480,6 +483,7 @@ class LongestString(object):
         """The source code of the tool."""
         in_tables = parameters[0].valueAsText.split(";")
         for counter, intable in enumerate(in_tables, start=1):
+            intable = intable.replace("'", "")
             arcpy.AddMessage('\n# {} of {}: {}'.format(
                 counter, len(in_tables), intable))
             fieldnames = [field.baseName for field in
@@ -869,8 +873,8 @@ class ListDataSourcesMXDs(object):
 
     def crawlmxds(self, in_mxds):
         for counter, in_mxd in enumerate(in_mxds, start=1):
-            # # when mxd file name has a space, arcgis input add "'" and need to remove it
-            # imxd = in_mxd.strip("'")
+            # when mxd file name has a space, arcgis input add "'" and need to remove it
+            in_mxd = in_mxd.strip("'")
             arcpy.AddMessage("\n#{} of {}: {}".format(counter, len(in_mxds), in_mxd))
             mxd = arcpy.mapping.MapDocument(in_mxd)
             dataframes = arcpy.mapping.ListDataFrames(mxd)
