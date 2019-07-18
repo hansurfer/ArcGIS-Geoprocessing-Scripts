@@ -13,7 +13,79 @@ class Toolbox(object):
         self.tools = [CountRecordVertice, ListAttDomains, UniqFieldValues,
                       CheckGeometry, ListDatasets, FCtoGEOMulti,
                       TabletoGEOMulti, ListFieldName, LongestString,
-                      SchemaCheck, ListDataSourcesMXDs, ListDataSourcesFolder, UpperCase, ChangeTextFieldLen, ChangeTextFieldLenBy, ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory]
+                      SchemaCheck, ListDataSourcesMXDs, ListDataSourcesFolder,
+                      UpperCase, ChangeTextFieldLen, ChangeTextFieldLenBy,
+                      ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory,
+                      findAndReplaceWorkspacePaths]
+
+
+class findAndReplaceWorkspacePaths(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Find and Replace Workspace Paths"
+        self.description = "Find and Replace Workspace Paths"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        in_mxds = arcpy.Parameter(
+            displayName="Input MXDs",
+            name="in_mxds",
+            datatype="DEMapDocument",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+
+        findwspath = arcpy.Parameter(
+            displayName="Old Workspace Path",
+            name="findwspath",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        replacewspath = arcpy.Parameter(
+            displayName="New Workspace Path",
+            name="replacewspath",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        parameters = [in_mxds, findwspath, replacewspath]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        inMXDs = parameters[0].valueAsText.split(';')
+        findworkspacepath = parameters[1].valueAsText
+        replaceworkspacepath = parameters[2].valueAsText
+        for counter, inMXD in enumerate(inMXDs, start=1):
+            inMXD = inMXD.replace("'", "")
+            arcpy.AddMessage('\n# {} of {}: {}'.format(
+                counter, len(inMXDs), inMXD))
+            mxd = arcpy.mapping.MapDocument(inMXD)
+            mxd.findAndReplaceWorkspacePaths(findworkspacepath, replaceworkspacepath)
+            mxd.save()
+            del mxd
+        return
 
 
 class CountRecordVertice(object):

@@ -1,6 +1,6 @@
 # ArcGIS Geoprocessing Scripts
 
-Collection of ArcGIS 10.6 python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
+Collection of ArcGIS 10.4 (should work on 10.5 and 10.6) python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
 
 ## Tools
 - Change Field Type: Change Field Type
@@ -12,6 +12,7 @@ Collection of ArcGIS 10.6 python geoprocessing scripts (Python Toolbox). For mor
 - Count Records and Vertices: Print number of records and vertices
 - FCs to Geodatabase GP off: Feature Classes to Geodatabase with Geoprocessing History Off
 - Field Name to Upper Case: Change field name to all upper case
+- Find and Replace Workspace Paths: Find and Replace Workspace Paths
 - List Data Sources MXDs: List layer's data source from MXDs
 - List Data Sources MXDs in a Folder: List layer's data source from MXDs in a folder
 - List Datasets: Print datasets in workspace
