@@ -1462,13 +1462,16 @@ class ChangeFieldType(object):
     def is_digit(self,s):
         """
         check the list and return if all values are numeber
+        https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float
         :param s: list
         :return:
         """
         for textvalue in s:
-            if not textvalue.isdigit():
+            try:
+                float(textvalue)
+            except ValueError:
                 arcpy.AddMessage("\n*******************************************")
-                arcpy.AddMessage("    Text contain non-numeric value: {}    ".format(textvalue))
+                arcpy.AddMessage("    Text contain non-numeric value: {}".format(textvalue))
                 self.getkey(textvalue)
                 exit()
 
@@ -1482,7 +1485,7 @@ class ChangeFieldType(object):
         return len(max(fieldvalue_list, key=len))
 
     def getkey(self, textvalue):
-        for oid, tvalue in self.valueDict.items():
+        for oid, tvalue in valueDict.items():
             if tvalue == textvalue:
                 arcpy.AddMessage("\n    OBJECT ID: {}    ".format(oid))
 
@@ -1500,7 +1503,8 @@ class ChangeFieldType(object):
         replace_fields = ['OID@', paras[1].valueAsText]
 
         # dictionary of OID and target field values
-        valueDict = {}
+        global valueDict
+        valueDict= {}
         # list of OID and target field values
         fieldvaluelist = []
         with arcpy.da.SearchCursor(paras[0].valueAsText, replace_fields) as cursor:
