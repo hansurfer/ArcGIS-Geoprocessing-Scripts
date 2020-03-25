@@ -6,7 +6,7 @@ class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "ESRI Toolbox"
+        self.label = "Utility Toolbox"
         self.alias = ""
 
         # List of tool classes associated with this toolbox
@@ -16,7 +16,7 @@ class Toolbox(object):
                       SchemaCheck, ListDataSourcesMXDs, ListDataSourcesFolder,
                       UpperCase, ChangeTextFieldLen, ChangeTextFieldLenBy,
                       ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory,
-                      findAndReplaceWorkspacePaths]
+                      findAndReplaceWorkspacePaths, DuplicateFieldValues]
 
 
 class findAndReplaceWorkspacePaths(object):
@@ -645,9 +645,10 @@ class SchemaCheck(object):
 
         Parameters:
         input_layer: string
-            input data full path. ex) "C:\Works\GEODB\Data_Load.gdb\NotaryPublicPt"
+            input data full path. ex) "C:\\Works\GEODB\\Data_Load.gdb\\NotaryPublicPt"
         target_layer: string
-            target data full path. ex) "Database Connections\Connection to dcgisprd.dc.gov.sde\DCGIS.NotaryPublicPt"
+            target data full path. ex) "Database Connections\\Connection to
+            dcgisprd.dc.gov.sde\\DCGIS.NotaryPublicPt"
         """
         if ".sde" in input_layer:
             # remove schema from name
@@ -701,7 +702,7 @@ class SchemaCheck(object):
         # check field type
         arcpy.AddMessage("** Checking Field Type")
         fieldtypeList = [i for i in combinedfield_list if
-                         input_dict[i][0] <> target_dict[i][0]]
+                         input_dict[i][0] != target_dict[i][0]]
         if fieldtypeList:
             arcpy.AddMessage("* Found type mismatch in common fields")
             for i in fieldtypeList:
@@ -719,7 +720,7 @@ class SchemaCheck(object):
         # check field length
         arcpy.AddMessage("** Checking Field Lenght")
         fieldlenList = [i for i in combinedfield_list if
-                        input_dict[i][1] <> target_dict[i][1]]
+                        input_dict[i][1] != target_dict[i][1]]
         if fieldlenList:
             arcpy.AddMessage("* Found length mismatch in common fields")
             for i in fieldlenList:
@@ -814,7 +815,7 @@ class TabletoGEOMulti(object):
 class UniqFieldValues(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Unique Field Values"
+        self.label = "List Unique Field Values"
         self.description = "Print unique field values"
         self.canRunInBackground = False
 
@@ -867,7 +868,7 @@ class UniqFieldValues(object):
             fields (str): field names, separated by ';'
 
         Returns:
-            vDict (dict): a dictionary with table name key and field values
+            vDict (dict): a dictionary with field name key and field values
         """
         vDict = dict((fname, []) for fname in fields)
         with arcpy.da.SearchCursor(table, fields) as cursor:
@@ -1129,7 +1130,8 @@ class UpperCase(object):
         if desc.dataType == "FeatureClass":
             arcpy.FeatureClassToFeatureClass_conversion(parameters[0].valueAsText, parameters[1].valueAsText, parameters[2].valueAsText, field_mapping=fms)
         elif desc.dataType == "Table":
-            arcpy.TableToTable_conversion(parameters[0].valueAsText, parameters[01].valueAsText, parameters[2].valueAsText, field_mapping=fms)
+            arcpy.TableToTable_conversion(parameters[0].valueAsText, parameters[
+                1].valueAsText, parameters[2].valueAsText, field_mapping=fms)
         arcpy.AddMessage("  ")
         return
 
@@ -1669,4 +1671,91 @@ class WSInventory(object):
             for i in rows:
                 w.writerow(i)
 
+        return
+
+
+class DuplicateFieldValues(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "List Duplicate Field Values"
+        self.description = "Print duplicate field values"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        in_table = arcpy.Parameter(
+            displayName="Input Table",
+            name="in_table",
+            datatype=["GPTableView"],
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        in_fields = arcpy.Parameter(
+            displayName="Fields",
+            name="in_fields",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+        in_fields.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
+        in_fields.parameterDependencies = [in_table.name]
+
+        parameters = [in_table, in_fields]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def constructDict(self, table, fields):
+        """
+        construct a dictionary with table name and field values
+
+        Args:
+            table (str): table full path.
+            fields (str): field names, separated by ';'
+
+        Returns:
+            vDict (dict): a dictionary with field name key and field values
+        """
+        vDict = dict((fname, []) for fname in fields)
+        with arcpy.da.SearchCursor(table, fields) as cursor:
+            for row in cursor:
+                for i in range(len(row)):
+                    vDict[fields[i]].append(row[i])
+        return vDict
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        fieldList = parameters[1].valueAsText.split(";")
+        valueDict = self.constructDict(parameters[0].valueAsText, fieldList)
+        for fname in valueDict:
+            arcpy.AddMessage("\nField: {}".format(fname))
+            arcpy.AddMessage("duplicate:")
+            occurances = valueDict[fname]
+            for i in sorted(set(occurances)):
+                icount = occurances.count(i)
+                if icount > 1:
+                    if i is None:
+                        arcpy.AddMessage("    None/Null: 0")
+                    elif isinstance(i, str):
+                        arcpy.AddMessage(
+                            "    {}: {}".format(i.encode('utf-8'), icount))
+                    else:
+                        arcpy.AddMessage("    {}: {}".format(i, icount))
+        arcpy.AddMessage("    ")
         return
