@@ -1,6 +1,10 @@
 # ArcGIS Geoprocessing Scripts
 
-Collection of ArcGIS 10.4 (should work on 10.5 and 10.6) python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
+Collection of ArcGIS Desktop 10.4 (should work on 10.5 and 10.6) and ArcGIS Pro (2.3 or later) python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
+
+## Toolbox
+- ArcGIS Desktop - [utility_tool.pyt](utility_tool.pyt)
+- ArcGIS Pro - [utility_tool_arcgispro.pyt](utility_tool_arcgispro.pyt)
 
 ## Tools
 - Change Field Type: Change Field Type
