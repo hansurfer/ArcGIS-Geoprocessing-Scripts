@@ -14,7 +14,7 @@ class Toolbox(object):
         # List of tool classes associated with this toolbox
         self.tools = [findAndReplaceWorkspacePaths, CountRecordVertice, CheckGeometry,
                       FCtoGEOMulti, ListAttDomains, ListDatasets, ListFieldName,
-                      LongestString, TabletoGEOMulti, UniqFieldValues,
+                      ListFieldALIASName, LongestString, TabletoGEOMulti, UniqFieldValues,
                       ListDataSourcesMXDs, ListDataSourcesFolder, UpperCase,
                       ChangeTextFieldLen, ChangeTextFieldLenBy,
                       ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory,
@@ -512,6 +512,56 @@ class ListFieldName(object):
                 counter, len(in_tables), intable))
             for field in arcpy.ListFields(intable):
                 arcpy.AddMessage(field.baseName)
+        arcpy.AddMessage("\n")
+        return
+
+
+class ListFieldALIASName(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "List Field and Alias Names"
+        self.description = "Print out field and Alias names in Tables and Feature Classes"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        in_tables = arcpy.Parameter(
+            displayName="Input Tables",
+            name="in_tables",
+            datatype="GPTableView",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+
+        parameters = [in_tables]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        in_tables = parameters[0].valueAsText.split(";")
+        for counter, intable in enumerate(in_tables, start=1):
+            intable = intable.replace("'", "")
+            arcpy.AddMessage('\n# {} of {}: {}'.format(
+                counter, len(in_tables), intable))
+            for field in arcpy.ListFields(intable):
+                arcpy.AddMessage('{}, {}'.format(field.baseName, field.aliasName))
         arcpy.AddMessage("\n")
         return
 
