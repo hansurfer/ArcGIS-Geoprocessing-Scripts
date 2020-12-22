@@ -624,7 +624,7 @@ class LongestString(object):
                         len(max(fieldvalue_list, key=len))))
                     arcpy.AddMessage("    {}".format(
                         max(fieldvalue_list, key=len).encode(
-                            'utf-8')))  # add encode to fix unicode error
+                            'utf-8').decode('utf-8', 'ignore')))  # add encode to fix unicode error
                 else:
                     arcpy.AddMessage("    EMPTY FIELD")
         arcpy.AddMessage("\n")
@@ -772,7 +772,7 @@ class UniqFieldValues(object):
                     arcpy.AddMessage("    None: 0")
                 elif isinstance(i, str):
                     arcpy.AddMessage(
-                        "    {}: {}".format(i.encode('utf-8'), icount))
+                        "    {}: {}".format(i.encode('utf-8').decode('utf-8', 'ignore'), icount))
                 else:
                     arcpy.AddMessage("    {}: {}".format(i, icount))
         arcpy.AddMessage("    ")
@@ -1635,7 +1635,7 @@ class DuplicateFieldValues(object):
                         arcpy.AddMessage("    None/Null: 0")
                     elif isinstance(i, str):
                         arcpy.AddMessage(
-                            "    {}: {}".format(i.encode('utf-8'), icount))
+                            "    {}: {}".format(i.encode('utf-8').decode('utf-8', 'ignore'), icount))
                     else:
                         arcpy.AddMessage("    {}: {}".format(i, icount))
         arcpy.AddMessage("    ")
@@ -1794,6 +1794,18 @@ class SchemaCheck(object):
                 len(fieldlenList)))
         else:
             arcpy.AddMessage("* No field lenght mismatch in common fields")
+        arcpy.AddMessage("\n")
+
+        # check record count
+        arcpy.AddMessage("** Checking Record Count")
+        input_row_count = int(
+            arcpy.GetCount_management(input_layer).getOutput(0))
+        target_row_count = int(
+            arcpy.GetCount_management(target_layer).getOutput(0))
+        arcpy.AddMessage('* Total input number of records: {}'.format(
+            '{0:,}'.format(input_row_count)))
+        arcpy.AddMessage('* Total target number of records: {}'.format(
+            '{0:,}'.format(target_row_count)))
         arcpy.AddMessage("\n\n")
 
     def execute(self, parameters, messages):

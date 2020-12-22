@@ -782,7 +782,20 @@ class SchemaCheck(object):
                 len(fieldlenList)))
         else:
             arcpy.AddMessage("* No field lenght mismatch in common fields")
+        arcpy.AddMessage("\n")
+
+        # check record count
+        arcpy.AddMessage("** Checking Record Count")
+        input_row_count = int(
+            arcpy.GetCount_management(input_layer).getOutput(0))
+        target_row_count = int(
+            arcpy.GetCount_management(target_layer).getOutput(0))
+        arcpy.AddMessage('* Total input number of records: {}'.format(
+            '{0:,}'.format(input_row_count)))
+        arcpy.AddMessage('* Total target number of records: {}'.format(
+            '{0:,}'.format(target_row_count)))
         arcpy.AddMessage("\n\n")
+
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
