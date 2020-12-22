@@ -1,6 +1,6 @@
 # ArcGIS Geoprocessing Scripts
 
-Collection of ArcGIS Desktop 10.4 (should work on 10.5 and 10.6) and ArcGIS Pro (2.3 or later) python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
+Collection of ArcGIS Desktop 10.4 (or later) and ArcGIS Pro (2.3 or later) python geoprocessing scripts (Python Toolbox). For more information, please see the tool descriptions in ArcGIS Python Toolbox.
 
 ## Toolbox
 - ArcGIS Desktop - [utility_tool.pyt](utility_tool.pyt)
@@ -22,6 +22,7 @@ Collection of ArcGIS Desktop 10.4 (should work on 10.5 and 10.6) and ArcGIS Pro 
 - List Datasets: Print datasets in workspace
 - List Domains: Print out attribute domains
 - List Field Names: Print out field names in Tables and Feature Classes
+- List Field Name and Alias: Print out field name and alias in Tables and Feature Classes
 - List Longest String: List the longest text in Tables and Feature Classes
 - Tables to Geodatabase GP off: Tables to Geodatabase with Geoprocessing History Off
 - Unique Field Values: Print unique field values
