@@ -16,7 +16,126 @@ class Toolbox(object):
                       SchemaCheck, ListDataSourcesMXDs, ListDataSourcesFolder,
                       UpperCase, ChangeTextFieldLen, ChangeTextFieldLenBy,
                       ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory,
-                      findAndReplaceWorkspacePaths, DuplicateFieldValues]
+                      findAndReplaceWorkspacePaths, DuplicateFieldValues,
+                      ListEmptyDataset, ListLayerName]
+
+class ListLayerName(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "List Layer Name"
+        self.description = "Print Layer Name in Current Map Document (mxd)"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        return
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        mxd = arcpy.mapping.MapDocument("CURRENT")
+        dataframes = arcpy.mapping.ListDataFrames(mxd)
+        for df in dataframes:
+            layers = arcpy.mapping.ListLayers(mxd, "", df)
+            for lyr in layers:
+                if lyr.supports("dataSource"):
+                    arcpy.AddMessage(" {}".format(lyr.name))
+        del mxd
+        return
+
+
+class ListEmptyDataset(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "List Empty Dataset"
+        self.description = "Print Empty Dataset Name in Workspace (Personal Geodatabase, File Geodatabase, and SDE)"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        in_ws = arcpy.Parameter(
+            displayName="Workspace",
+            name="in_ws",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        in_datatype = arcpy.Parameter(
+            displayName="Dataset Type",
+            name="in_type",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+        in_datatype.filter.list = ['FeatureClass', 'Table']
+
+        parameters = [in_ws, in_datatype]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def inventory_data(self, workspace, datatype):
+        """
+        Generates full path names under a catalog tree for all requested
+        datatype(s).
+
+        Parameters:
+        workspace: string
+            The top-level workspace that will be used.
+        datatypes: string | list | tuple
+            Keyword(s) representing the desired datatypes. A single
+            datatype can be expressed as a string, otherwise use
+            a list or tuple. See arcpy.da.Walk documentation
+            for a full list.
+        """
+        for path, path_names, data_names in arcpy.da.Walk(workspace, datatype):
+            for data_name in data_names:
+                yield os.path.join(path, data_name)
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        in_wspace = parameters[0].valueAsText
+        in_dtype = parameters[1].valueAsText
+        iList = list(self.inventory_data(in_wspace, in_dtype))
+        # loop data list
+        counter = 1
+        for dataset in iList:
+            arcpy.AddMessage("{} of {}".format(counter, len(iList)))
+            result = arcpy.GetCount_management(dataset)
+            if result == 0:
+                arcpy.AddMessage("{}".format(dataset))
+            counter += 1
 
 
 class findAndReplaceWorkspacePaths(object):
@@ -726,7 +845,7 @@ class SchemaCheck(object):
         # fields in both dataset
         combinedfield_list = (
             self.compareIntersect(input_dict.keys(), target_dict.keys()))
-        arcpy.AddMessage("** Checking Fields List")
+        arcpy.AddMessage("\n** Checking Fields List")
         # fields not in input
         missingfieldInputlist = sorted([x for x in (
             self.compareDifference(target_dict.keys(), input_dict.keys()))])
@@ -735,64 +854,65 @@ class SchemaCheck(object):
             self.compareDifference(input_dict.keys(), target_dict.keys()))])
 
         if (len(missingfieldTargetlist) + len(missingfieldInputlist)) == 0:
-            arcpy.AddMessage("* All fields are presented in input and target")
+            arcpy.AddMessage("  - All fields are presented in input and target")
         else:
-            arcpy.AddMessage("* Field not in input ({}):".format(tnames[0]))
+            arcpy.AddMessage("  - Field not in input ({}):".format(tnames[0]))
             for i in missingfieldInputlist:
                 if i.lower() not in skipfieldname:
-                    arcpy.AddMessage("  {}".format(i.upper()))
+                    arcpy.AddMessage("    {}".format(i.upper()))
             arcpy.AddMessage(" ")
 
-            arcpy.AddMessage("* Field not in target ({}):".format(tnames[1]))
+            arcpy.AddMessage("  - Field not in target ({}):".format(tnames[1]))
             for i in missingfieldTargetlist:
                 if i.lower() not in skipfieldname:
-                    arcpy.AddMessage("  {}".format(i.upper()))
+                    arcpy.AddMessage("    {}".format(i.upper()))
         arcpy.AddMessage("\n")
 
         # check field type
-        arcpy.AddMessage("** Checking Field Type")
+        arcpy.AddMessage("\n** Checking Field Type")
         fieldtypeList = [i for i in combinedfield_list if
                          input_dict[i][0] != target_dict[i][0]]
         if fieldtypeList:
-            arcpy.AddMessage("* Found type mismatch in common fields")
+            arcpy.AddMessage("  - Found type mismatch in common fields")
             for i in fieldtypeList:
-                arcpy.AddMessage("  Field:{}".format(i))
+                arcpy.AddMessage("    Field:{}".format(i))
                 arcpy.AddMessage(
-                    "  Input:{} - Len:{}, Target:{} - Len:{}".format(
+                    "    Input:{} - Len:{}, Target:{} - Len:{}".format(
                         input_dict[i][0], input_dict[i][1], target_dict[i][0],
                         target_dict[i][1]))
-            arcpy.AddMessage("Total {} field(s) type mismatch found".format(
+            arcpy.AddMessage("    Total {} field(s) type mismatch found".format(
                 len(fieldtypeList)))
         else:
-            arcpy.AddMessage("* No field type mismatch in common fields")
+            arcpy.AddMessage("  - No field type mismatch in common fields")
         arcpy.AddMessage("\n")
 
         # check field length
-        arcpy.AddMessage("** Checking Field Lenght")
+        arcpy.AddMessage("\n** Checking Field Lenght")
         fieldlenList = [i for i in combinedfield_list if
                         input_dict[i][1] != target_dict[i][1]]
         if fieldlenList:
-            arcpy.AddMessage("* Found length mismatch in common fields")
+            arcpy.AddMessage("  - Found length mismatch in common fields")
             for i in fieldlenList:
-                arcpy.AddMessage("  Field:{}".format(i))
+                arcpy.AddMessage("    Field:{}".format(i))
                 arcpy.AddMessage(
-                    "  Input:{}, Target:{}".format(input_dict[i][1],
+                    "    Input:{}, Target:{}".format(input_dict[i][1],
                                                    target_dict[i][1]))
-            arcpy.AddMessage("Total {} field(s) lenght mismatch found".format(
+            arcpy.AddMessage("    Total {} field(s) lenght mismatch "
+                             "found".format(
                 len(fieldlenList)))
         else:
-            arcpy.AddMessage("* No field lenght mismatch in common fields")
+            arcpy.AddMessage("  - No field lenght mismatch in common fields")
         arcpy.AddMessage("\n")
 
         # check record count
-        arcpy.AddMessage("** Checking Record Count")
+        arcpy.AddMessage("\n** Checking Record Count")
         input_row_count = int(
             arcpy.GetCount_management(input_layer).getOutput(0))
         target_row_count = int(
             arcpy.GetCount_management(target_layer).getOutput(0))
-        arcpy.AddMessage('* Total input number of records: {}'.format(
+        arcpy.AddMessage('  - Total input number of records: {}'.format(
             '{0:,}'.format(input_row_count)))
-        arcpy.AddMessage('* Total target number of records: {}'.format(
+        arcpy.AddMessage('  - Total target number of records: {}'.format(
             '{0:,}'.format(target_row_count)))
         arcpy.AddMessage("\n\n")
 
@@ -806,10 +926,10 @@ class SchemaCheck(object):
         names = self.baseName(in_tables, target_tables)
         arcpy.AddMessage("****** Checking Data Name ******")
         if names[0] == names[1]:
-            arcpy.AddMessage("Input and Target have same name\n\n")
+            arcpy.AddMessage("  - Input and Target have same name\n\n")
         else:
-            arcpy.AddMessage("Input and Target have different Name")
-            arcpy.AddMessage("{} : {}\n\n".format(names[0], names[1]))
+            arcpy.AddMessage("  - Input and Target have different Name")
+            arcpy.AddMessage("    {} : {}\n\n".format(names[0], names[1]))
 
         self.checkSchema(in_tables, target_tables)
 
