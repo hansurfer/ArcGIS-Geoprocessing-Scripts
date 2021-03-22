@@ -17,7 +17,171 @@ class Toolbox(object):
                       UpperCase, ChangeTextFieldLen, ChangeTextFieldLenBy,
                       ChangeNumetricFieldTypAndLen, ChangeFieldType, WSInventory,
                       findAndReplaceWorkspacePaths, DuplicateFieldValues,
-                      ListEmptyDataset, ListLayerName]
+                      ListEmptyDataset, ListLayerName, UpdateField]
+
+
+class UpdateField(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Update Field based on another layer"
+        self.description = "Update field based on the field from another " \
+                           "layer (alternative to join and field " \
+                           "calculate)"
+        self.canRunInBackground = False
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        # Input Features parameter
+        in_table = arcpy.Parameter(
+            displayName="Input Table",
+            name="in_table",
+            datatype=["GPTableView"],
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        input_join_field = arcpy.Parameter(
+            displayName="Input Join Field",
+            name="input_join_field",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+        input_join_field.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
+        input_join_field.parameterDependencies = [in_table.name]
+
+        input_update_field = arcpy.Parameter(
+            displayName="Input Update Field",
+            name="input_update_field",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+        input_update_field.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
+        input_update_field.parameterDependencies = [in_table.name]
+
+        join_table = arcpy.Parameter(
+            displayName="Join Table",
+            name="join_table",
+            datatype=["GPTableView"],
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        join_table_field = arcpy.Parameter(
+            displayName="Join Table Field",
+            name="join_table_field",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+        join_table_field.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
+        join_table_field.parameterDependencies = [join_table.name]
+
+        join_ref_field = arcpy.Parameter(
+            displayName="Join Reference Field",
+            name="join_ref_field",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+        join_ref_field.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
+        join_ref_field.parameterDependencies = [join_table.name]
+
+        in_ws = arcpy.Parameter(
+            displayName="Workspace",
+            name="in_ws",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input",
+            multiValue=False)
+
+        parameters = [in_table, input_join_field, input_update_field,
+                      join_table, join_table_field, join_ref_field, in_ws]
+
+        return parameters
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def createDict(self, fc, fields):
+        """
+        construct a dictionary with unique id and target field values
+        Args:
+            table (str): table full path.
+            fields (str): list with field names
+        Returns:
+            vDict (dict): a dictionary with unique id key and field values
+        """
+        attr_dict = {}
+        # loop source feature class
+        with arcpy.da.SearchCursor(fc, fields) as cursor:
+            for row in cursor:
+                attr_dict[row[0]] = row[1]
+        return attr_dict
+
+    def versionCheck(self, fc):
+        """Check if feature class is versioned"""
+        desc = arcpy.Describe(fc)
+        if desc.isVersioned:
+            return True
+        else:
+            return False
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        valueDict = self.createDict(parameters[3].valueAsText, [parameters[4].valueAsText,
+                                                                parameters[5].valueAsText])
+        if self.versionCheck(parameters[0]):
+            # ws = r'E:\Connections\Connection to gisdev1 as sde.sde'
+            ws = r'E:\Connections\Connection to PRD_TRANSIT.sde'
+            # Start an edit session. Must provide the workspace.
+            edit = arcpy.da.Editor(parameters[6].valueAsText)
+
+            # Edit session is started without an undo/redo stack for
+            # versioned data
+            #  (for second argument, use False for unversioned data)
+            edit.startEditing(False, True)
+
+            # Start an edit operation
+            edit.startOperation()
+
+            # Update a row into the table.
+            with arcpy.da.UpdateCursor(parameters[0].valueAsText,
+                                       [parameters[1].valueAsText, parameters[2].valueAsText]) as \
+                    cursor:
+                for row in cursor:
+                    row[1] = valueDict[row[0]]
+                    cursor.updateRow(row)
+                del row, cursor
+
+            # Stop the edit operation.
+            edit.stopOperation()
+
+            # Stop the edit session and save the changes
+            edit.stopEditing(True)
+        else:
+            # Update a row into the table.
+            with arcpy.da.UpdateCursor(parameters[0].valueAsText,
+                                       [parameters[1].valueAsText, parameters[2].valueAsText]) as \
+                    cursor:
+                for row in cursor:
+                    row[1] = valueDict[row[0]]
+                    cursor.updateRow(row)
+                del row, cursor
+
 
 class ListLayerName(object):
     def __init__(self):
