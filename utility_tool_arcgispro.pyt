@@ -2033,15 +2033,21 @@ class SchemaCheck(object):
                              "target")
         else:
             arcpy.AddMessage("  - Field not in input ({}):".format(tnames[0]))
+            fname_list = []
             for i in missingfieldInputlist:
                 if i.lower() not in skipfieldname:
                     arcpy.AddMessage("    {}".format(i.upper()))
+                    fname_list.append(str(i).upper())
+            arcpy.AddMessage(fname_list)
             arcpy.AddMessage(" ")
 
             arcpy.AddMessage("  - Field not in target ({}):".format(tnames[1]))
+            fname_list = []
             for i in missingfieldTargetlist:
                 if i.lower() not in skipfieldname:
-                    arcpy.AddMessage("  {}".format(i.upper()))
+                    arcpy.AddMessage("    {}".format(i.upper()))
+                    fname_list.append(str(i).upper())
+            arcpy.AddMessage(fname_list)
         arcpy.AddMessage("\n")
 
         # check field type
