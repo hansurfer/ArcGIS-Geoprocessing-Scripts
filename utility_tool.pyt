@@ -145,8 +145,6 @@ class UpdateField(object):
         valueDict = self.createDict(parameters[3].valueAsText, [parameters[4].valueAsText,
                                                                 parameters[5].valueAsText])
         if self.versionCheck(parameters[0]):
-            # ws = r'E:\Connections\Connection to gisdev1 as sde.sde'
-            ws = r'E:\Connections\Connection to PRD_TRANSIT.sde'
             # Start an edit session. Must provide the workspace.
             edit = arcpy.da.Editor(parameters[6].valueAsText)
 
