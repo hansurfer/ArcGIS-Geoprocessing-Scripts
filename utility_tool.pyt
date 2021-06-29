@@ -88,16 +88,8 @@ class UpdateField(object):
         join_ref_field.filter.list = ['Text', 'Short', 'Long', 'Float', 'Single', 'Double']
         join_ref_field.parameterDependencies = [join_table.name]
 
-        in_ws = arcpy.Parameter(
-            displayName="Workspace",
-            name="in_ws",
-            datatype="DEWorkspace",
-            parameterType="Required",
-            direction="Input",
-            multiValue=False)
-
         parameters = [in_table, input_join_field, input_update_field,
-                      join_table, join_table_field, join_ref_field, in_ws]
+                      join_table, join_table_field, join_ref_field]
 
         return parameters
 
@@ -161,8 +153,9 @@ class UpdateField(object):
                                        [parameters[1].valueAsText, parameters[2].valueAsText]) as \
                     cursor:
                 for row in cursor:
-                    row[1] = valueDict[row[0]]
-                    cursor.updateRow(row)
+                    if row[0] in valueDict.keys():
+                        row[1] = valueDict[row[0]]
+                        cursor.updateRow(row)
                 del row, cursor
 
             # Stop the edit operation.
@@ -176,8 +169,9 @@ class UpdateField(object):
                                        [parameters[1].valueAsText, parameters[2].valueAsText]) as \
                     cursor:
                 for row in cursor:
-                    row[1] = valueDict[row[0]]
-                    cursor.updateRow(row)
+                    if row[0] in valueDict.keys():
+                        row[1] = valueDict[row[0]]
+                        cursor.updateRow(row)
                 del row, cursor
 
 
