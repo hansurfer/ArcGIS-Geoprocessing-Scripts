@@ -33,9 +33,9 @@ class UpdateField(object):
         """Define parameter definitions"""
         # Input Features parameter
         in_table = arcpy.Parameter(
-            displayName="Input Table",
+            displayName="Input Dataset (feature class or shapefile)",
             name="in_table",
-            datatype=["GPTableView"],
+            datatype=['DEFeatureClass', 'DEShapefile'],
             parameterType="Required",
             direction="Input",
             multiValue=False)
@@ -124,21 +124,28 @@ class UpdateField(object):
                 attr_dict[row[0]] = row[1]
         return attr_dict
 
-    def versionCheck(self, fc):
-        """Check if feature class is versioned"""
-        desc = arcpy.Describe(fc)
-        if desc.isVersioned:
-            return True
-        else:
-            return False
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        arcpy.AddMessage("- create data dictionary")
         valueDict = self.createDict(parameters[3].valueAsText, [parameters[4].valueAsText,
                                                                 parameters[5].valueAsText])
-        if self.versionCheck(parameters[0]):
+        # set workspace
+        arcpy.AddMessage("- set workspace")
+        desc = arcpy.Describe(parameters[0])
+        ws = desc.path
+        desc1 = arcpy.Describe(ws)
+        if hasattr(desc1, "datasetType") and desc1.datasetType=='FeatureDataset':
+            ws = desc1.path
+
+        count = len(list(i for i in
+                         arcpy.da.SearchCursor(desc.catalogPath, ["OBJECTID"])))
+
+        arcpy.AddMessage("- check if the input dataset is versioned")
+        if desc.isVersioned:
             # Start an edit session. Must provide the workspace.
-            edit = arcpy.da.Editor(parameters[6].valueAsText)
+            arcpy.AddMessage("- start an edit session")
+            edit = arcpy.da.Editor(ws)
 
             # Edit session is started without an undo/redo stack for
             # versioned data
@@ -149,10 +156,16 @@ class UpdateField(object):
             edit.startOperation()
 
             # Update a row into the table.
-            with arcpy.da.UpdateCursor(parameters[0].valueAsText,
+            arcpy.AddMessage("- update the table")
+            with arcpy.da.UpdateCursor(desc.catalogPath,
                                        [parameters[1].valueAsText, parameters[2].valueAsText]) as \
                     cursor:
-                for row in cursor:
+                ten_list = [x for x in range(10, 100, 10)]
+                for counter, row in enumerate(cursor, start = 1):
+                    percent = int(counter * 100 / count)
+                    if percent in ten_list:
+                        ten_list.remove(percent)
+                        arcpy.AddMessage('{} percent complete'.format(percent))
                     if row[0] in valueDict.keys():
                         row[1] = valueDict[row[0]]
                         cursor.updateRow(row)
@@ -162,13 +175,21 @@ class UpdateField(object):
             edit.stopOperation()
 
             # Stop the edit session and save the changes
+            arcpy.AddMessage("- stop the edit session and save the changes")
             edit.stopEditing(True)
+
         else:
             # Update a row into the table.
-            with arcpy.da.UpdateCursor(parameters[0].valueAsText,
+            arcpy.AddMessage("- update the table")
+            with arcpy.da.UpdateCursor(desc.catalogPath,
                                        [parameters[1].valueAsText, parameters[2].valueAsText]) as \
                     cursor:
-                for row in cursor:
+                ten_list = [x for x in range(10, 100, 10)]
+                for counter, row in enumerate(cursor, start = 1):
+                    percent = int(counter * 100 / count)
+                    if percent in ten_list:
+                        ten_list.remove(percent)
+                        arcpy.AddMessage('{} percent complete'.format(percent))
                     if row[0] in valueDict.keys():
                         row[1] = valueDict[row[0]]
                         cursor.updateRow(row)
